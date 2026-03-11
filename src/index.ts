@@ -33,6 +33,7 @@ import {
   initDatabase,
   setRegisteredGroup,
   setRouterState,
+  deleteSession,
   setSession,
   storeChatMetadata,
   storeMessage,
@@ -480,11 +481,7 @@ async function main(): Promise<void> {
   const channelOpts = {
     onMessage: (chatJid: string, msg: NewMessage) => {
       // Sender allowlist drop mode: discard messages from denied senders before storing
-      if (
-        !msg.is_from_me &&
-        !msg.is_bot_message &&
-        registeredGroups[chatJid]
-      ) {
+      if (!msg.is_from_me && !msg.is_bot_message && registeredGroups[chatJid]) {
         const cfg = loadSenderAllowlist();
         if (
           shouldDropMessage(chatJid, cfg) &&
@@ -509,6 +506,14 @@ async function main(): Promise<void> {
       isGroup?: boolean,
     ) => storeChatMetadata(chatJid, timestamp, name, channel, isGroup),
     registeredGroups: () => registeredGroups,
+    resetSession: (chatJid: string): boolean => {
+      const group = registeredGroups[chatJid];
+      if (!group) return false;
+      delete sessions[group.folder];
+      deleteSession(group.folder);
+      logger.info({ chatJid, folder: group.folder }, 'Session reset');
+      return true;
+    },
   };
 
   // Create and connect all registered channels.
