@@ -414,9 +414,12 @@ async function runQuery(
     log(`Additional directories: ${extraDirs.join(', ')}`);
   }
 
+  log(`Using model: ${sdkEnv.CLAUDE_MODEL || '(default)'}`);
+
   for await (const message of query({
     prompt: stream,
     options: {
+      model: sdkEnv.CLAUDE_MODEL || undefined,
       cwd: '/workspace/group',
       additionalDirectories: extraDirs.length > 0 ? extraDirs : undefined,
       resume: sessionId,
